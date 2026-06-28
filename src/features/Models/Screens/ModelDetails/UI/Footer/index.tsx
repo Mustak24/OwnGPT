@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Alert, Show } from '@funtools/native-ui/core';
 import { pick } from '@react-native-documents/picker';
 import { asyncTry } from '@funtools/native-ui/utils';
+import { delay } from '@/shared/utils';
 
 export default function Footer() {
   const { model, downloadingInfo } = useModelDetailsContext();
@@ -21,12 +22,23 @@ export default function Footer() {
     event,
     { handleState, reset },
   ) => {
+    handleState('loading', true);
+
     const [pickFile] = await pick({
       allowMultiSelection: false,
       mimeType: ['application/octet-stream', 'application/gguf'],
     });
 
-    if (!pickFile) return;
+    await delay(200);
+
+    if (pickFile.error) {
+      Alert.error({
+        title: 'Error',
+        subtitle: pickFile.error
+      });
+
+      return reset();
+    }
 
     if (pickFile.name !== model.fileName) {
       return Alert.error({
@@ -36,19 +48,17 @@ export default function Footer() {
     }
 
     handleState('title', 'Loading Model...');
-    handleState('loading', true);
 
     const [_, error] = await asyncTry(() =>
       modelHandlers.loadLocalModel(pickFile.name!, pickFile.uri),
     );
 
-    reset();
-    if (error) {
-      return Alert.error({
-        title: 'Error',
-        subtitle: error.message ?? 'Failed to load model.',
-      });
-    }
+    if (error) Alert.error({
+      title: 'Error',
+      subtitle: error.message ?? 'Failed to load model.',
+    });
+
+    return reset();
   };
 
   return (

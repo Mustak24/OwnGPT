@@ -1,12 +1,14 @@
+import { navigationRef } from "@/app/navigation";
 import { useNavigation as useNavigationBase } from "@react-navigation/native";
 
 export default function useNavigation() {
     const navigation = useNavigationBase()
     return {
-        ...navigation,
+        // ...navigation,
+        ...navigationRef,
         goBack: () => {
-            if (navigation.canGoBack()) {
-                navigation.goBack();
+            if (navigationRef.canGoBack()) {
+                navigationRef.goBack();
             }
         }
     }

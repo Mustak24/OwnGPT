@@ -49,3 +49,8 @@ export function UUIDGenerator() {
 
   return generate;
 };
+
+
+export async function delay(ms: number) {
+    return new Promise((resolve) => setTimeout(() => resolve(null), ms));
+}
