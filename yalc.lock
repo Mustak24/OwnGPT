@@ -1,0 +1,9 @@
+{
+  "version": "v1",
+  "packages": {
+    "@funtools/native-ui": {
+      "signature": "72ee907bb89ee28d040f8259c0f61cbe",
+      "file": true
+    }
+  }
+}
