@@ -1,4 +1,5 @@
-import { navigationRef } from './provider'
+import { navigationRef, RootStackParams } from './provider'
+import { StackActions } from '@react-navigation/native'
 
 export {
     navigationRef,
@@ -7,11 +8,23 @@ export {
 } from './provider'
 
 
-export const navigation = {
-    ...navigationRef,
+const customServices = {
     goBack() {
         if(navigationRef.canGoBack()) {
             navigationRef.goBack()
         }
-    }
-} as typeof navigationRef
+    },
+    replace<RouteName extends keyof RootStackParams>(
+        name: RouteName,
+        params: RootStackParams[RouteName]
+    ) {
+        if (navigationRef.isReady()) {
+        navigationRef.dispatch(StackActions.replace(name, params));
+        }
+    },
+}
+
+export const navigation = {
+    ...navigationRef,
+    ...customServices
+} as typeof navigationRef & typeof customServices

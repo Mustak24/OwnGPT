@@ -5,6 +5,8 @@ import { Icon, IconName, ThemeText, ThemeView } from '@funtools/native-ui/core';
 import { Button, PressableView } from '@funtools/native-ui';
 import { openLink } from '@/shared/utils/native';
 import Clipboard from '@react-native-clipboard/clipboard';
+import InferenceSettings from './InferenceSettings';
+import DangerSection from './DangerSection';
 
 export default function MainSection() {
   const { model } = useModelDetailsContext();
@@ -157,6 +159,9 @@ export default function MainSection() {
           onPress={() => openLink(model.downloadUrl)}
         />
       </View>
+
+      <InferenceSettings/>
+      <DangerSection/>
     </View>
   );
 }

@@ -3,6 +3,7 @@ import modelsMetadata from './models-metadata';
 import fs from 'react-native-fs';
 import {
   MODEL_DOWNLOADING_INFO,
+  MODEL_INFERENCE_SETTINGS,
   MODEL_INFO,
   MODEL_STATUS,
 } from '@/features/Models/Types';
@@ -32,10 +33,32 @@ if (!storage.contains('models-downloading-info')) {
   );
 }
 
+if (!storage.contains('models-inference-settings')) {
+  storage.set(
+    'models-inference-settings',
+    JSON.stringify(
+      modelsMetadata.reduce((acc, model) => {
+        acc[model.id] = {
+          n_predict: 128,
+          temperature: 0.7,
+          top_p: 0.9,
+          top_k: 40,
+          min_p: 0.1,
+          repeat_penalty: 1.1,
+          frequency_penalty: 0.1,
+          presence_penalty: 0.1,
+        } as MODEL_INFERENCE_SETTINGS;
+        return acc;
+      }, {} as Record<string, MODEL_INFERENCE_SETTINGS>),
+    ),
+  );
+}
+
 type KEY_VALUES = {
   'models-metadata': typeof modelsMetadata;
   'selected-model': MODEL_INFO | null;
   'models-downloading-info': Record<string, MODEL_DOWNLOADING_INFO>;
+  'models-inference-settings': Record<string, MODEL_INFERENCE_SETTINGS>;
 };
 
 export default {
@@ -71,7 +94,21 @@ export default {
   },
 
   async delete(id: string) {
-    return await fs.unlink(this.getDir(id));
+    const metadata = this.get('models-metadata').find(m => m.id === id);
+    if(!metadata) return;
+
+    const finalPath = this.getFinalPath(id, metadata.fileName);
+    const tempPath = this.getTempPath(id);
+    
+    if (await fs.exists(finalPath)) {
+      await fs.unlink(finalPath);
+    }
+    
+    if (await fs.exists(tempPath)) {
+      await fs.unlink(tempPath);
+    }
+
+    this.writeMetadata(id, { status: 'NOT_DOWNLOADED', downloadedBytes: 0 });
   },
 
   async sizeOf(path: string) {
@@ -124,4 +161,13 @@ export default {
     }
     return metadata;
   },
+
+  updateInferenceSettings(id: string, settings: Partial<MODEL_INFERENCE_SETTINGS>) {
+    const allSettings = this.get('models-inference-settings');
+    allSettings[id] = {
+      ...allSettings[id],
+      ...settings,
+    };
+    this.set('models-inference-settings', allSettings);
+  }
 } as const;

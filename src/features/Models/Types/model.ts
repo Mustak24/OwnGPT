@@ -28,3 +28,14 @@ export type MODEL_DOWNLOADING_INFO = {
     downloadingSpeedInBytes: number,
     status: MODEL_STATUS
 }
+
+export type MODEL_INFERENCE_SETTINGS = {
+    n_predict: number;
+    temperature: number;
+    top_p: number;
+    top_k: number;
+    min_p: number;
+    repeat_penalty: number;
+    frequency_penalty: number;
+    presence_penalty: number;
+}

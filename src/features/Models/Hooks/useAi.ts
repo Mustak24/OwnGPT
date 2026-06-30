@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { initLlama, LlamaContext, TokenData } from "llama.rn";
 import DeviceInfo from "react-native-device-info";
 import { useModelStore } from "../Store";
@@ -10,8 +10,7 @@ type UseAiOptions = {
 }
 
 export default function useAi({
-    systemPrompt = DEFAULT_PROMPT,
-    messages = []
+    systemPrompt = DEFAULT_PROMPT
 }: UseAiOptions = {}) {
     const context = useRef<LlamaContext | null>(null);
     const model = useModelStore(store => store.selectedModel);
@@ -23,12 +22,15 @@ export default function useAi({
         }
 
         const totalRam = (await DeviceInfo.getTotalMemory().catch(() => 4 * 1024 ** 3)) / (1024 ** 3);
+        const usedRam = (await DeviceInfo.getUsedMemory().catch(() => 2 * 1024 ** 3)) / (1024 ** 3);
+        const availableRam = totalRam - usedRam;
         
         const ctx = (() => {
-            if(totalRam <= 4) return 512;
-            if(totalRam <= 8) return 1024;
-            if(totalRam <= 12) return 2048;
-            return 4096;
+            if(availableRam <= 2) return 512;
+            if(availableRam <= 4) return 1024;
+            if(availableRam <= 6) return 2048;
+            if(availableRam <= 8) return 4096;
+            return 8192;
         })();
 
         // const gpuLayers = totalRam < 6 ? 0 : 16;
@@ -36,13 +38,12 @@ export default function useAi({
 
 
         context.current = await initLlama({
-            model: localStorage.getFinalPath(model?.id, model?.fileName),
-            n_ctx: ctx,
-            // n_gpu_layers: gpuLayers,
-            use_mlock: true,
-            n_threads: cpuThreads,
-            n_parallel: 2,
             ...configs,
+            n_ctx: ctx,
+            n_parallel: 2,
+            n_threads: cpuThreads,
+            // n_gpu_layers: gpuLayers,
+            model: localStorage.getFinalPath(model?.id, model?.fileName),
         });
     }
 
@@ -51,13 +52,15 @@ export default function useAi({
         context.current = null;
     }
 
-    async function generate(prompt: string, callback?: (content: TokenData) => void) {
+    async function generate(prompt: string, callback?: (content: TokenData) => void, messages: Array<{role: 'system' | 'user' | 'assistant', message: string}> = []) {
         if (!context.current) return;
 
         const res = await context.current.completion({
             messages: [
                 {role: 'system', content: systemPrompt},
-                ...(messages.length < 20 ? messages : messages.slice(-20)),
+                ...(messages.length < 20 ? messages : messages.slice(-20)).map(m => ({
+                    role: m.role, content: m.message
+                })),
                 {role: 'user', content: prompt}
             ],
         }, callback);

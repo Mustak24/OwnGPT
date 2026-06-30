@@ -8,7 +8,7 @@ export type CHAT_ITEM = {
 export type CHAT_MESSAGE = {
     id: string;
     message: string;
-    role: 'USER' | 'SYSTEM' | 'AI';
+    role: 'user' | 'system' | 'assistant';
     createAt: number;
     updateAt: number;
 }

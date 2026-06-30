@@ -21,14 +21,14 @@ export default function MainSection() {
       data={chat}
       keyExtractor={item => item.id}
       renderItem={({ item }: { item: CHAT_MESSAGE }) => (
-        <Show when={item.role !== 'SYSTEM'} >
+        <Show when={item.role !== 'system'} >
           <View
             className={`max-w-[80%] px-4 py-2 rounded-lg ${
-              item.role === 'USER' ? 'bg-primary self-end' : 'bg-secondary self-start'
+              item.role === 'user' ? 'bg-primary self-end' : 'bg-secondary self-start'
             }`}
-            >
+          >
             <Show
-              when={item.role === 'AI'}
+              when={item.role === 'user'}
               otherwise={<RenderMarkdown markdown={item.message} />}
             >
               <ThemeView

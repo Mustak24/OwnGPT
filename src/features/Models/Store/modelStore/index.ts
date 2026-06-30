@@ -12,6 +12,7 @@ const { useStore, useHandlers } = createStore({
     models: localStorage.get('models-metadata') ?? [],
     downloadingInfo: localStorage.get('models-downloading-info'),
     selectedModel: localStorage.get('selected-model'),
+    inferenceSettings: localStorage.get('models-inference-settings'),
   },
 
   syncHandlers: {
@@ -39,6 +40,19 @@ const { useStore, useHandlers } = createStore({
         modelHandlers.selectModel(states.models.find(m => m.id === id) ?? null);
       }
     },
+
+    updateInferenceSettings(
+      { states, handlers },
+      id: string,
+      settings: Partial<typeof states.inferenceSettings[string]>,
+    ) {
+      const currentSettings = states.inferenceSettings[id];
+      const newSettings = { ...currentSettings, ...settings };
+
+      handlers.inferenceSettings.update(id, newSettings);
+
+      localStorage.updateInferenceSettings(id, settings);
+    }
   },
 
   asyncHandlers: {
@@ -144,15 +158,17 @@ const { useStore, useHandlers } = createStore({
       }
 
       await localStorage.delete(id);
-      handlers.downloadingInfo.set(pre => {
-        const { [id]: _, ...rest } = pre;
-        return rest;
-      });
+      handlers.downloadingInfo.update(id, pre => ({
+        ...pre,
+        task: null,
+        status: 'NOT_DOWNLOADED',
+        downloadedBytes: 0,
+      }));
 
       if (states.selectedModel?.id === id) {
         modelHandlers.selectModel(null);
         for (let model of states.models) {
-          if (model.id === id) continue;
+          if (model.id === id || states.downloadingInfo[model.id]?.status !== 'DOWNLOADED') continue;
           modelHandlers.selectModel(model);
           break;
         }

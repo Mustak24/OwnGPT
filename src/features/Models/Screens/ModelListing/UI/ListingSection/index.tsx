@@ -1,8 +1,9 @@
 import { ModelCard } from '@/features/Models/Components';
 import { useModelStore } from '@/features/Models/Store';
 import { View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { Icon, Show, ThemeText, ThemeView } from '@funtools/native-ui/core';
+import { Icon, Show, ThemeText } from '@funtools/native-ui/core';
+import { PressableView } from '@funtools/native-ui';
+import { navigation } from '@/app/navigation';
 
 export default function ListingSection() {
   const { models, downloadingInfo, selectedModel } = useModelStore(store => ({
@@ -11,14 +12,20 @@ export default function ListingSection() {
     selectedModel: store.selectedModel,
   }));
 
-  const navigation = useNavigation();
-
   return (
     <View className="w-full gap-2">
       <Show when={!!selectedModel}>
-        <ThemeView
+        <PressableView
+          alpha={100}
           color="primary"
           className="p-4 rounded-xl flex-row items-center justify-between gap-4"
+          onPress={() => {
+            navigation.navigate('ModelStack', {
+              screen: 'DetailsScreen', params: {
+                id: selectedModel?.id ?? ''
+              }
+            })
+          }}
         >
           <View>
             <ThemeText textColor={'white'} className="text-lg font-bold">
@@ -40,7 +47,7 @@ export default function ListingSection() {
               Selected
             </ThemeText>
           </View>
-        </ThemeView>
+        </PressableView>
       </Show>
 
       <ThemeText color="text-secondary" className="text-lg font-bold pt-4">

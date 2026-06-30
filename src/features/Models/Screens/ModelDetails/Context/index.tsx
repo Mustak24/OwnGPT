@@ -29,7 +29,11 @@ export function ModelDetailsContextProvider({
     downloadingInfo,
   };
 
-  return <Context.Provider value={states}>{children}</Context.Provider>;
+  return (
+    <Context.Provider value={states}>
+      {children}
+    </Context.Provider>
+  );
 }
 
 export function useModelDetailsContext() {

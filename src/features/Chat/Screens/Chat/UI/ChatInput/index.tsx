@@ -13,9 +13,10 @@ export default function ChatInput() {
   });
 
   const model = useModelStore(store => store.selectedModel);
-  const {chatName, chatId} = useChatStore(store => ({
+  const {chatName, chatId, messages} = useChatStore(store => ({
     chatName: store.chat.name,
     chatId: store.chat.id,
+    messages: store.chat.messages,
   }));
 
   const { generate, generateChatName } = useAi();
@@ -30,32 +31,31 @@ export default function ChatInput() {
       setMessage('');
       chatHandlers.addMessage({
         message,
-        role: 'USER',
+        role: 'user',
       });
 
-      
       const { id: botMessageId } = chatHandlers.addMessage({
         message: 'Thinking...',
-        role: 'AI',
+        role: 'assistant',
       });
       
       
+      
+      if(chatName === 'NEW_CHAT') {
+        const name = await generateChatName(message);
+        chatHandlers.updateChatName(chatId, name?.trim() ?? chatId);
+      }
+      
       let aiResponse = '';
-
       await generate(message, partialResponse => {
         aiResponse += partialResponse.token;
         chatHandlers.updateMessage(botMessageId, aiResponse);
-      }).catch(() => {
+      }, messages).catch(() => {
         chatHandlers.updateMessage(botMessageId, 'Failed to get response from AI.');
       });
 
       chatHandlers.updateChatName(botMessageId, aiResponse.trim());
 
-      if(chatName === 'NEW_CHAT') {
-        generateChatName(message).then(name => {
-          chatHandlers.updateChatName(chatId, name?.trim() ?? chatId);
-        });
-      }
     } catch (error) {
       console.error(error);
     } finally {
