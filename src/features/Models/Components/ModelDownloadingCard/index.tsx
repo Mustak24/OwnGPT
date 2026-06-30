@@ -1,5 +1,5 @@
 import { useWindowDimensions, View } from "react-native";
-import { Icon, Show, ShowWithAnimation, ThemeText } from "@funtools/native-ui/core";
+import { Confirm, Icon, Show, ShowWithAnimation, ThemeText } from "@funtools/native-ui/core";
 import { Button, IconButton, PressableView, ProgressBar, SpinnerLoader } from "@funtools/native-ui";
 import { formatBytes, formatSeconds } from "@/shared/utils";
 import { modelHandlers, useModelStore } from "@/features/Models/Store";
@@ -63,7 +63,14 @@ export default function DownloadCard({modelId}: DownloadCardProps) {
                         icon="Trash2"
                         loading={downloadingInfo.status === 'DELETING'}
                         disabled={downloadingInfo.status === 'DOWNLOADING' || downloadingInfo.status === 'RESUMING'}
-                        onPress={() => modelHandlers.deleteModel(model.id)}
+                        onPress={() => {
+                            Confirm.error({
+                                title: "Delete Model",
+                                subtitle: "Are you sure you want to delete this model? This action cannot be undone.",
+                                confirm: {title: 'Yes, Delete'},
+                                onConfirm: () => modelHandlers.deleteModel(model.id)
+                            })
+                        }}
                     />
                 </View>
             </View>
