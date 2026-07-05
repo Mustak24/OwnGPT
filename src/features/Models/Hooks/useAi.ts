@@ -13,7 +13,10 @@ export default function useAi({
     systemPrompt = DEFAULT_PROMPT
 }: UseAiOptions = {}) {
     const context = useRef<LlamaContext | null>(null);
-    const model = useModelStore(store => store.selectedModel);
+    const {model, configs} = useModelStore(store => ({
+        model: store.selectedModel,
+        configs: store.inferenceSettings[store.selectedModel?.id ?? ''] ?? {}
+    }));
 
     async function initContext(configs?: Omit<Parameters<typeof initLlama>[0], 'model'>) {
         context.current = null;
@@ -26,6 +29,7 @@ export default function useAi({
         const availableRam = totalRam - usedRam;
         
         const ctx = (() => {
+            if(model.contextLength) return model.contextLength;
             if(availableRam <= 2) return 512;
             if(availableRam <= 4) return 1024;
             if(availableRam <= 6) return 2048;
@@ -63,6 +67,7 @@ export default function useAi({
                 })),
                 {role: 'user', content: prompt}
             ],
+            ...configs
         }, callback);
 
         return res;

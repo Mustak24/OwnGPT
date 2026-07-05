@@ -25,36 +25,36 @@ export default function ChatInput() {
   const [isResponding, setIsResponding] = useState(false);
 
   async function handleSend() {
-    if (!message.trim()) return;
+    const msg = message.trim();
+    if (!msg) return;
+
     setIsResponding(true);
     try {
       setMessage('');
       chatHandlers.addMessage({
-        message,
+        message: msg,
         role: 'user',
       });
 
+      chatHandlers.updateChatName(chatId, chatId);
       const { id: botMessageId } = chatHandlers.addMessage({
         message: 'Thinking...',
         role: 'assistant',
       });
       
-      
-      
-      if(chatName === 'NEW_CHAT') {
-        const name = await generateChatName(message);
-        chatHandlers.updateChatName(chatId, name?.trim() ?? chatId);
-      }
-      
       let aiResponse = '';
-      await generate(message, partialResponse => {
+      await generate(msg, partialResponse => {
         aiResponse += partialResponse.token;
         chatHandlers.updateMessage(botMessageId, aiResponse);
       }, messages).catch(() => {
         chatHandlers.updateMessage(botMessageId, 'Failed to get response from AI.');
       });
-
-      chatHandlers.updateChatName(botMessageId, aiResponse.trim());
+      
+      if(chatName === 'NEW_CHAT') {
+        generateChatName(msg).then(name => {
+          chatHandlers.updateChatName(chatId, name?.trim() ?? chatId);
+        });
+      }
 
     } catch (error) {
       console.error(error);
